@@ -10,6 +10,8 @@ This workflow checks each deal from three angles, then combines them into one ri
 
 ## How it works
 
+![The deal risk workflow in n8n](docs/n8n-workflow.png)
+
 ```mermaid
 flowchart LR
     A[Deals sheet] --> B[Run Context<br/>unique run ID]
@@ -88,6 +90,8 @@ One full run scored all 50 deals ($14.7M in pipeline) with 200 Claude calls in a
 | Low | 24 | $7.26M | 49% |
 | Medium | 17 | $4.64M | 32% |
 | High | 9 | $2.81M | 19% |
+
+![Open pipeline by stage and risk level](docs/pipeline-risk-by-stage.png)
 
 What stood out:
 
@@ -177,6 +181,7 @@ To run the summary:
 ```bash
 pip install -r requirements.txt
 python analysis/summarize_results.py
+python analysis/make_chart.py
 ```
 
 ## Repo contents
@@ -187,6 +192,8 @@ python analysis/summarize_results.py
 | `data/sample_deals.csv` | 50 synthetic deals (all company and contact names are made up) |
 | `data/sample_results.csv` | Agent scores from one full run |
 | `data/run_usage.csv` | Tokens, latency, and cost for each of the run's 200 Claude calls |
+| `analysis/make_chart.py` | Draws the pipeline-by-stage chart in `docs/` |
+| `docs/` | Workflow screenshot and results chart |
 | `analysis/summarize_results.py` | Pandas script that turns the scores into pipeline views and a cost summary |
 
 ## What I'd add next
