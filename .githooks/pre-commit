@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+# github-publish-guard pre-commit check
+set -e
+staged=$(git diff --cached --name-only --diff-filter=ACM)
+[ -z "$staged" ] && exit 0
+fail=0
+
+# 1. Internal file names
+bad_names=$(echo "$staged" | grep -Ei '(^|/)(_private/|NOTES|SCRATCH|DRAFT|WIP)|\.local\.|\.raw\.|(^|/)\.env($|\.)|credentials.*\.json|service-account.*\.json' | grep -v '\.env\.example$' || true)
+if [ -n "$bad_names" ]; then
+  echo "BLOCKED: internal files staged:"; echo "$bad_names"; fail=1
+fi
+
+# 2. Secrets and private identifiers in content
+patterns='sk-ant-[A-Za-z0-9_-]{10,}|sk-[A-Za-z0-9]{20,}|AIza[0-9A-Za-z_-]{30,}|ghp_[A-Za-z0-9]{30,}|xox[abprs]-[A-Za-z0-9-]{10,}|-----BEGIN [A-Z ]*PRIVATE KEY-----|pikapod\.net|docs\.google\.com/spreadsheets/d/[A-Za-z0-9_-]{30,}|"documentId"[^}]*"value":"[A-Za-z0-9_-]{30,}"'
+for f in $staged; do
+  [ -f "$f" ] || continue
+  hits=$(git show ":$f" | grep -EnI "$patterns" || true)
+  if [ -n "$hits" ]; then
+    echo "BLOCKED: possible secret or private ID in $f:"; echo "$hits" | cut -c1-160; fail=1
+  fi
+done
+
+if [ $fail -ne 0 ]; then
+  echo ""; echo "Commit stopped by github-publish-guard. Unstage or sanitize the files above."
+  exit 1
+fi

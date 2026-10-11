@@ -1,0 +1,21 @@
+# --- github-publish-guard: internal material, never publish ---
+_private/
+*.local.*
+*.raw.*
+NOTES*
+SCRATCH*
+DRAFT*
+WIP*
+.env
+.env.*
+!.env.example
+*.pem
+*credentials*.json
+*service-account*.json
+.claude/
+.DS_Store
+__pycache__/
+.venv/
+venv/
+.ipynb_checkpoints/
+# --- end github-publish-guard ---

@@ -1,0 +1,51 @@
+deal_id,company_name,industry,deal_amount,contact_name,contact_title,days_open,stage,email_count,meeting_count,avg_response_lag_days,notes
+D-1000,Meridian Logistics,Logistics,392000,Karen Davis,Chief Financial Officer,36,Negotiation,10,3,2.9,Champion is actively pushing internally; Fast-tracked by internal champion
+D-1001,Crestline Aerospace,Aerospace & Defense,157000,Karen Anderson,VP of Supply Chain,11,Proposal Sent,7,2,6.1,Security review taking longer than expected; Requested a discount citing BairesDev's pricing
+D-1002,Northbridge Manufacturing,Manufacturing,150000,Ashley Lopez,VP of Supply Chain,21,Final Approval,11,2,4.3,Economic buyer has gone quiet; Comparing pricing against Gigster
+D-1003,Northgate Systems,SaaS/Technology,452000,Steven Martinez,Director of Procurement,69,Negotiation,17,4,2.6,Strong alignment on requirements; Legal redlines nearly finalized
+D-1004,Northgate Construction,Construction,98000,Nancy White,Head of IT,128,Final Approval,17,5,2.1,Champion is actively pushing internally; Strong alignment on requirements
+D-1005,Summit Biotech,Biotech,482000,John Williams,Head of IT,155,Contract Review,18,5,1.5,Strong alignment on requirements; Fast-tracked by internal champion
+D-1006,Anchor Media,Media,219000,Elizabeth Lewis,VP of Supply Chain,102,Proposal Sent,20,5,1.5,"Budget approved, awaiting signature; Confirmed timeline for rollout"
+D-1007,Copperline Construction,Construction,254000,Charles Gonzalez,VP of Supply Chain,145,Contract Review,2,3,7.3,Legal redlines going back and forth; Economic buyer has gone quiet
+D-1008,Meridian Energy,Energy,384000,Susan Anderson,VP of Operations,77,Proposal Sent,14,4,4.6,Confirmed timeline for rollout; Strong alignment on requirements
+D-1009,Vertex Insurance,Insurance,485000,Nancy Harris,Senior Buyer,10,Contract Review,11,3,3.5,Requested a discount citing Turing's pricing; Security review taking longer than expected
+D-1010,Northgate Telecom,Telecom,80000,Steven Moore,Chief Financial Officer,178,Final Approval,20,6,1.1,Fast-tracked by internal champion; Strong alignment on requirements
+D-1011,Silverline Software,SaaS/Technology,246000,Thomas Lewis,Senior Buyer,40,Proposal Sent,17,6,1.8,Champion is actively pushing internally; Security review passed with no issues
+D-1012,Summit Robotics,Manufacturing,51000,Andrew Johnson,Director of Engineering,141,Proposal Sent,16,3,3.1,Confirmed timeline for rollout; Positive feedback from technical evaluation
+D-1013,Bluepoint Telecom,Telecom,352000,David Brown,Director of Procurement,120,Contract Review,15,3,3.9,Champion is actively pushing internally; Beat out Toptal in technical bakeoff
+D-1014,Redstone Manufacturing,Manufacturing,244000,David Miller,Senior Buyer,45,Final Approval,20,4,2,Security review passed with no issues; Champion is actively pushing internally
+D-1015,Anchor Logistics,Logistics,100000,Kimberly Harris,Head of IT,114,Final Approval,9,3,3.6,Legal redlines nearly finalized; Positive feedback from technical evaluation
+D-1016,Silverline Materials,Manufacturing,94000,Betty Thompson,IT Manager,58,Contract Review,10,3,4.8,Champion moved to a different role mid-deal; Requested a discount citing BairesDev's pricing
+D-1017,Cobalt Telecom,Telecom,95000,Kimberly Ramirez,Senior Buyer,24,Negotiation,14,6,2.6,Security review passed with no issues; Strong alignment on requirements
+D-1018,Cobalt Construction,Construction,351000,Lisa Williams,Chief Operating Officer,159,Contract Review,8,2,6.1,Budget approval stuck with finance; Legal redlines going back and forth
+D-1019,Westbrook Biotech,Biotech,303000,James Anderson,VP of Supply Chain,35,Negotiation,9,3,5,Economic buyer has gone quiet; Legal redlines going back and forth
+D-1020,Harbor Foods,Food & Beverage,428000,Mark Martinez,VP of Supply Chain,177,Negotiation,11,2,5.9,Legal redlines going back and forth; Security review taking longer than expected
+D-1021,Meridian Aerospace,Aerospace & Defense,122000,John Martinez,VP of Supply Chain,97,Proposal Sent,10,3,4.6,Security review taking longer than expected; Procurement asked for a competitive bid against Toptal
+D-1022,Ironwood Systems,SaaS/Technology,341000,Richard Harris,Chief Financial Officer,77,Proposal Sent,8,4,4.5,Budget approval stuck with finance; Internal reorg has delayed the decision
+D-1023,Summit Insurance,Insurance,80000,Nancy Jones,Chief Operating Officer,20,Contract Review,17,3,4,Strong alignment on requirements; Security review passed with no issues
+D-1024,Fieldstone Aerospace,Aerospace & Defense,488000,Lisa White,Chief Financial Officer,70,Proposal Sent,5,1,6.2,Procurement asked for a competitive bid against BairesDev; Comparing pricing against BairesDev
+D-1025,Ironwood Retail,Retail,454000,Charles Ramirez,VP of Operations,130,Proposal Sent,16,5,2.8,Strong alignment on requirements; Champion is actively pushing internally
+D-1026,Crestline Software,SaaS/Technology,410000,John Ramirez,Director of Procurement,81,Contract Review,13,4,4.5,Security review taking longer than expected; Legal redlines going back and forth
+D-1027,Harbor Chemicals,Chemicals,237000,Maria Brown,VP of Supply Chain,98,Contract Review,10,4,4.4,Legal redlines nearly finalized; Champion is actively pushing internally
+D-1028,Copperline Logistics,Logistics,366000,Kimberly Sanchez,Senior Buyer,60,Contract Review,12,5,3.2,Legal redlines nearly finalized; Fast-tracked by internal champion
+D-1029,Silverline Materials,Manufacturing,298000,Charles Thompson,VP of Sales,42,Proposal Sent,15,5,4.3,Confirmed timeline for rollout; Legal redlines nearly finalized
+D-1030,Northbridge Aerospace,Aerospace & Defense,235000,Patricia Martinez,Head of IT,158,Contract Review,11,5,3.7,Security review passed with no issues; Legal redlines nearly finalized
+D-1031,Brightwater Construction,Construction,359000,Robert Clark,Head of IT,89,Proposal Sent,14,4,3.1,Security review passed with no issues; Positive feedback from technical evaluation
+D-1032,Copperline Chemicals,Chemicals,268000,Mark Thompson,Chief Operating Officer,112,Proposal Sent,20,4,2.5,"Budget approved, awaiting signature; Fast-tracked by internal champion"
+D-1033,Westbrook Systems,SaaS/Technology,248000,Karen Robinson,Director of Procurement,44,Final Approval,10,3,5.9,Requested a discount citing Upwork Enterprise's pricing; Internal reorg has delayed the decision
+D-1034,Copperline Aerospace,Aerospace & Defense,245000,Andrew Garcia,IT Manager,76,Proposal Sent,10,3,6,Legal redlines going back and forth; Technical evaluation flagged concerns
+D-1035,Northgate Energy,Energy,472000,John Hernandez,Director of Engineering,148,Negotiation,19,4,2.3,Beat out Toptal in technical bakeoff; Confirmed timeline for rollout
+D-1036,Redstone Aerospace,Aerospace & Defense,441000,Elizabeth Johnson,Head of IT,117,Final Approval,8,1,7.1,Procurement asked for a competitive bid against Gigster; Technical evaluation flagged concerns
+D-1037,Cascade Insurance,Insurance,290000,Steven Gonzalez,Chief Operating Officer,149,Proposal Sent,12,3,3.7,"Budget approved, awaiting signature; Positive feedback from technical evaluation"
+D-1038,Vertex Construction,Construction,318000,James Robinson,Chief Operating Officer,154,Negotiation,21,5,0.8,Beat out BairesDev in technical bakeoff; Economic buyer engaged and responsive
+D-1039,Crestline Foods,Food & Beverage,157000,Richard Harris,Chief Operating Officer,117,Contract Review,9,3,5.1,Comparing pricing against BairesDev; Security review taking longer than expected
+D-1040,Summit Logistics,Logistics,333000,David Clark,VP of Operations,49,Proposal Sent,19,4,1.7,"Economic buyer engaged and responsive; Budget approved, awaiting signature"
+D-1041,Graniteview Construction,Construction,174000,Steven Clark,Chief Financial Officer,37,Negotiation,6,2,7.5,Security review taking longer than expected; Comparing pricing against Turing
+D-1042,Meridian Energy,Energy,415000,Sandra Brown,VP of Supply Chain,20,Contract Review,9,4,4.5,Procurement asked for a competitive bid against Toptal; Technical evaluation flagged concerns
+D-1043,Meridian Materials,Manufacturing,377000,Anthony Lewis,IT Manager,49,Final Approval,19,5,2.3,Positive feedback from technical evaluation; Confirmed timeline for rollout
+D-1044,Copperline Chemicals,Chemicals,440000,Richard Ramirez,Head of IT,32,Contract Review,6,3,6.5,Economic buyer has gone quiet; Champion moved to a different role mid-deal
+D-1045,Ridgeline Biotech,Biotech,423000,Barbara Miller,Director of Engineering,76,Contract Review,14,5,1.7,Security review passed with no issues; Strong alignment on requirements
+D-1046,Copperline Telecom,Telecom,345000,Steven Davis,IT Manager,135,Final Approval,14,5,2.6,Confirmed timeline for rollout; Economic buyer engaged and responsive
+D-1047,Ridgeline Aerospace,Aerospace & Defense,184000,Jennifer Wilson,Senior Buyer,100,Final Approval,12,5,2,"Fast-tracked by internal champion; Budget approved, awaiting signature"
+D-1048,Crestline Analytics,SaaS/Technology,404000,John White,VP of Supply Chain,144,Contract Review,4,1,6.6,Champion moved to a different role mid-deal; Internal reorg has delayed the decision
+D-1049,Vertex Media,Media,372000,Maria Moore,VP of Sales,42,Final Approval,5,2,6.4,Budget approval stuck with finance; Champion moved to a different role mid-deal

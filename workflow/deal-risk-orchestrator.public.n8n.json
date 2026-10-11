@@ -1,0 +1,1209 @@
+{
+  "name": "Deal Risk Assessment - Orchestrator v1",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "8f56b368-d661-4fd7-918f-8f92a72d1bdc",
+      "name": "Start",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -120,
+        450
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Analyze this deal's engagement pattern.\n\nCompany: {{ $json.company_name }}\nEmails exchanged: {{ $json.email_count }}\nMeetings held: {{ $json.meeting_count }}\nAverage response lag (days): {{ $json.avg_response_lag_days }}\nNotes: {{ $json.notes }}",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "You are an engagement-pattern analyst inside a sales deal-risk assessment system. Judge how engaged the buyer is from email/meeting activity and response times. Return only the structured output: a risk level (Low, Medium, or High), a confidence score, and a one-sentence reasoning."
+        }
+      },
+      "id": "2b38cae4-e127-451f-a15c-fbbfad20290d",
+      "name": "Engagement Pattern Agent",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        720,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "claude-sonnet-5",
+          "cachedResultName": "Claude Sonnet 5"
+        },
+        "options": {
+          "temperature": 0.1
+        }
+      },
+      "id": "d41d6aaf-b3d2-4af9-b662-a315c3eeaee9",
+      "name": "Claude Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatAnthropic",
+      "typeVersion": 1.5,
+      "position": [
+        660,
+        200
+      ],
+      "credentials": {
+        "anthropicApi": {
+          "id": "REPLACE_ME",
+          "name": "your anthropicApi credential"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{ \"engagement_risk_level\": \"Low\", \"confidence\": 0.8, \"reasoning\": \"brief justification\" }"
+      },
+      "id": "1f4353d6-3fff-4207-860e-1f0e960fa7bd",
+      "name": "Engagement Risk Output",
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        840,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "YOUR_SHEET_ID",
+          "cachedResultName": "Deal Risk Agent - Metrics Log"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "id",
+          "value": "YOUR_SHEET_TAB",
+          "cachedResultName": "Untitled"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "run_id": "={{ $('Run Context').first().json.run_key }}",
+            "timestamp": "={{ $now.toISO() }}",
+            "agent_name": "Engagement Pattern Agent",
+            "input_tokens": "",
+            "output_tokens": "",
+            "cost_usd": "",
+            "latency_ms": "",
+            "output_summary": "={{ $json.output.engagement_risk_level }} ({{ $json.output.confidence }}): {{ $json.output.reasoning }}",
+            "deal_id": "={{ $('Limit (test batch)').item.json.deal_id }}"
+          },
+          "schema": [
+            {
+              "id": "run_id",
+              "displayName": "run_id",
+              "type": "string",
+              "display": true,
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "timestamp",
+              "displayName": "timestamp",
+              "type": "string",
+              "display": true,
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "agent_name",
+              "displayName": "agent_name",
+              "type": "string",
+              "display": true,
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "input_tokens",
+              "displayName": "input_tokens",
+              "type": "string",
+              "display": true,
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "output_tokens",
+              "displayName": "output_tokens",
+              "type": "string",
+              "display": true,
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "cost_usd",
+              "displayName": "cost_usd",
+              "type": "string",
+              "display": true,
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "latency_ms",
+              "displayName": "latency_ms",
+              "type": "string",
+              "display": true,
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "output_summary",
+              "displayName": "output_summary",
+              "type": "string",
+              "display": true,
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "deal_id",
+              "displayName": "deal_id",
+              "type": "string",
+              "display": true,
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "81873b33-3217-438d-8f26-ecda36e15eb1",
+      "name": "Log to Metrics Sheet",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1120,
+        -100
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "REPLACE_ME",
+          "name": "your googleSheetsOAuth2Api credential"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "claude-sonnet-5",
+          "cachedResultName": "Claude Sonnet 5"
+        },
+        "options": {
+          "temperature": 0.1
+        }
+      },
+      "id": "bbdfd8fc-2084-493b-907b-9b14c3644684",
+      "name": "ICP Fit Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatAnthropic",
+      "typeVersion": 1.5,
+      "position": [
+        660,
+        650
+      ],
+      "credentials": {
+        "anthropicApi": {
+          "id": "REPLACE_ME",
+          "name": "your anthropicApi credential"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{ \"icp_fit_level\": \"Strong\", \"confidence\": 0.8, \"reasoning\": \"brief justification\" }"
+      },
+      "id": "048de146-5a84-4b09-b617-78a04fd3beee",
+      "name": "ICP Fit Output",
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        840,
+        650
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Assess how well this deal fits an ideal customer profile.\n\nCompany: {{ $json.company_name }}\nIndustry: {{ $json.industry }}\nDeal amount: {{ $json.deal_amount }}\nContact title: {{ $json.contact_title }}\n\nICP criteria: mid-market to enterprise B2B companies ($50k+ deal size), buyer is a Director-level or above (VP, Head of, C-suite, Director), and industry is not a known poor-fit vertical (avoid: early-stage startups, government, education).",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "You are an ICP-fit analyst inside a sales deal-risk assessment system. Judge how well this deal matches the ideal customer profile based on company size signals, deal amount, contact seniority, and industry. Return only the structured output: a fit level (Strong, Moderate, or Weak), a confidence score, and a one-sentence reasoning."
+        }
+      },
+      "id": "cd23606e-1475-4c90-abca-a97f4988933a",
+      "name": "ICP Fit Agent",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        720,
+        450
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "YOUR_SHEET_ID",
+          "cachedResultName": "Deal Risk Agent - Metrics Log"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "id",
+          "value": "YOUR_SHEET_TAB",
+          "cachedResultName": "Untitled"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "run_id": "={{ $('Run Context').first().json.run_key }}",
+            "timestamp": "={{ $now.toISO() }}",
+            "agent_name": "ICP Fit Agent",
+            "input_tokens": "",
+            "output_tokens": "",
+            "cost_usd": "",
+            "latency_ms": "",
+            "output_summary": "={{ $json.output.icp_fit_level }} ({{ $json.output.confidence }}): {{ $json.output.reasoning }}",
+            "deal_id": "={{ $('Limit (test batch)').item.json.deal_id }}"
+          },
+          "schema": [
+            {
+              "id": "run_id",
+              "displayName": "run_id",
+              "type": "string",
+              "display": true,
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "timestamp",
+              "displayName": "timestamp",
+              "type": "string",
+              "display": true,
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "agent_name",
+              "displayName": "agent_name",
+              "type": "string",
+              "display": true,
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "input_tokens",
+              "displayName": "input_tokens",
+              "type": "string",
+              "display": true,
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "output_tokens",
+              "displayName": "output_tokens",
+              "type": "string",
+              "display": true,
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "cost_usd",
+              "displayName": "cost_usd",
+              "type": "string",
+              "display": true,
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "latency_ms",
+              "displayName": "latency_ms",
+              "type": "string",
+              "display": true,
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "output_summary",
+              "displayName": "output_summary",
+              "type": "string",
+              "display": true,
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "deal_id",
+              "displayName": "deal_id",
+              "type": "string",
+              "display": true,
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "8b5f0295-7161-4413-b685-d50139aeb148",
+      "name": "Log ICP Fit to Sheet",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1120,
+        350
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "REPLACE_ME",
+          "name": "your googleSheetsOAuth2Api credential"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "claude-sonnet-5",
+          "cachedResultName": "Claude Sonnet 5"
+        },
+        "options": {
+          "temperature": 0.1
+        }
+      },
+      "id": "3d4395e6-f6ad-4a7b-8fdc-c89d5f8fed5a",
+      "name": "Competitive Mentions Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatAnthropic",
+      "typeVersion": 1.5,
+      "position": [
+        660,
+        1100
+      ],
+      "credentials": {
+        "anthropicApi": {
+          "id": "REPLACE_ME",
+          "name": "your anthropicApi credential"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{ \"competitive_risk_level\": \"Low\", \"confidence\": 0.8, \"competitors_mentioned\": [\"Competitor A\"], \"reasoning\": \"brief justification\" }"
+      },
+      "id": "78c85676-1688-4925-8c9a-3712cd178a4c",
+      "name": "Competitive Mentions Output",
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        840,
+        1100
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Analyze this deal's notes for competitive threats.\n\nCompany: {{ $json.company_name }}\nNotes: {{ $json.notes }}",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "You are a competitive-intelligence analyst inside a sales deal-risk assessment system. Detect mentions of competitors, price comparisons, or statements suggesting the buyer is evaluating alternatives. Return only the structured output: a competitive risk level (Low, Medium, or High), a confidence score, a list of any competitors mentioned by name (empty list if none), and a one-sentence reasoning."
+        }
+      },
+      "id": "f43288a6-8263-4308-85a4-e8066998bb94",
+      "name": "Competitive Mentions Agent",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        720,
+        900
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "YOUR_SHEET_ID",
+          "cachedResultName": "Deal Risk Agent - Metrics Log"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "id",
+          "value": "YOUR_SHEET_TAB",
+          "cachedResultName": "Untitled"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "run_id": "={{ $('Run Context').first().json.run_key }}",
+            "timestamp": "={{ $now.toISO() }}",
+            "agent_name": "Competitive Mentions Agent",
+            "input_tokens": "",
+            "output_tokens": "",
+            "cost_usd": "",
+            "latency_ms": "",
+            "output_summary": "={{ $json.output.competitive_risk_level }} ({{ $json.output.confidence }}): {{ $json.output.reasoning }}",
+            "deal_id": "={{ $('Limit (test batch)').item.json.deal_id }}"
+          },
+          "schema": [
+            {
+              "id": "run_id",
+              "displayName": "run_id",
+              "type": "string",
+              "display": true,
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "timestamp",
+              "displayName": "timestamp",
+              "type": "string",
+              "display": true,
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "agent_name",
+              "displayName": "agent_name",
+              "type": "string",
+              "display": true,
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "input_tokens",
+              "displayName": "input_tokens",
+              "type": "string",
+              "display": true,
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "output_tokens",
+              "displayName": "output_tokens",
+              "type": "string",
+              "display": true,
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "cost_usd",
+              "displayName": "cost_usd",
+              "type": "string",
+              "display": true,
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "latency_ms",
+              "displayName": "latency_ms",
+              "type": "string",
+              "display": true,
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "output_summary",
+              "displayName": "output_summary",
+              "type": "string",
+              "display": true,
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "deal_id",
+              "displayName": "deal_id",
+              "type": "string",
+              "display": true,
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "a26376db-bf97-411b-80b5-d7405fcebf8f",
+      "name": "Log Competitive Mentions to Sheet",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1120,
+        800
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "REPLACE_ME",
+          "name": "your googleSheetsOAuth2Api credential"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "1",
+              "name": "deal_id",
+              "value": "={{ $('Limit (test batch)').item.json.deal_id }}",
+              "type": "string"
+            },
+            {
+              "id": "2",
+              "name": "company_name",
+              "value": "={{ $('Limit (test batch)').item.json.company_name }}",
+              "type": "string"
+            },
+            {
+              "id": "3",
+              "name": "engagement_output",
+              "value": "={{ $json.output }}",
+              "type": "object"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "23f733cd-1a54-490e-b2a8-dcbc8e598ac2",
+      "name": "Rename Engagement Output",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        1120,
+        100
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "1",
+              "name": "deal_id",
+              "value": "={{ $('Limit (test batch)').item.json.deal_id }}",
+              "type": "string"
+            },
+            {
+              "id": "2",
+              "name": "company_name",
+              "value": "={{ $('Limit (test batch)').item.json.company_name }}",
+              "type": "string"
+            },
+            {
+              "id": "3",
+              "name": "icp_output",
+              "value": "={{ $json.output }}",
+              "type": "object"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "4e6da9fc-911a-4a57-8f3a-4654483f0b89",
+      "name": "Rename ICP Output",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        1120,
+        550
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "1",
+              "name": "deal_id",
+              "value": "={{ $('Limit (test batch)').item.json.deal_id }}",
+              "type": "string"
+            },
+            {
+              "id": "2",
+              "name": "company_name",
+              "value": "={{ $('Limit (test batch)').item.json.company_name }}",
+              "type": "string"
+            },
+            {
+              "id": "3",
+              "name": "competitive_output",
+              "value": "={{ $json.output }}",
+              "type": "object"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "60714e40-a700-4972-8109-b170d57498fb",
+      "name": "Rename Competitive Output",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        1120,
+        1000
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "combineBySql",
+        "numberInputs": 3,
+        "query": "SELECT e.deal_id, e.company_name, e.engagement_output, i.icp_output, c.competitive_output\nFROM input1 AS e\nLEFT JOIN input2 AS i ON e.deal_id = i.deal_id\nLEFT JOIN input3 AS c ON e.deal_id = c.deal_id",
+        "options": {}
+      },
+      "id": "b859b0d0-dabb-42c6-a694-c2c40e6ee492",
+      "name": "Merge Findings",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        1420,
+        450
+      ]
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "claude-sonnet-5",
+          "cachedResultName": "Claude Sonnet 5"
+        },
+        "options": {
+          "temperature": 0.1
+        }
+      },
+      "id": "6a68fba6-61f6-4d36-9a32-afad72f044cb",
+      "name": "Synthesis Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatAnthropic",
+      "typeVersion": 1.5,
+      "position": [
+        1600,
+        650
+      ],
+      "credentials": {
+        "anthropicApi": {
+          "id": "REPLACE_ME",
+          "name": "your anthropicApi credential"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{ \"overall_risk_level\": \"Medium\", \"overall_confidence\": 0.8, \"recommended_action\": \"one sentence next step\", \"reasoning\": \"one to two sentence justification\" }"
+      },
+      "id": "080c88c8-d13e-46af-bb02-d9d99fef8722",
+      "name": "Synthesis Output",
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        1780,
+        650
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Synthesize an overall deal risk assessment for {{ $json.company_name }} (deal {{ $json.deal_id }}) from the three specialist findings below.\n\nEngagement risk: {{ $json.engagement_output.engagement_risk_level }} (confidence {{ $json.engagement_output.confidence }}) - {{ $json.engagement_output.reasoning }}\n\nICP fit: {{ $json.icp_output.icp_fit_level }} (confidence {{ $json.icp_output.confidence }}) - {{ $json.icp_output.reasoning }}\n\nCompetitive risk: {{ $json.competitive_output.competitive_risk_level }} (confidence {{ $json.competitive_output.confidence }}) - {{ $json.competitive_output.reasoning }}",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "You are the synthesis agent in a multi-agent sales deal-risk assessment system. Combine the three specialist findings (engagement pattern, ICP fit, competitive risk) into one overall risk assessment. Weigh engagement pattern most heavily, then ICP fit, then competitive risk. Return only the structured output: overall_risk_level (Low, Medium, or High), overall_confidence, a recommended_action (one sentence - what the rep should do next), and a one-to-two sentence reasoning that references the specific driving signals."
+        }
+      },
+      "id": "c6e02af5-fd06-432b-87bc-8d8a563ea958",
+      "name": "Synthesis Agent",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        1660,
+        450
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "YOUR_SHEET_ID",
+          "cachedResultName": "Deal Risk Agent - Metrics Log"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "id",
+          "value": "YOUR_SHEET_TAB",
+          "cachedResultName": "Untitled"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "run_id": "={{ $('Run Context').first().json.run_key }}",
+            "timestamp": "={{ $now.toISO() }}",
+            "agent_name": "Synthesis Agent",
+            "input_tokens": "",
+            "output_tokens": "",
+            "cost_usd": "",
+            "latency_ms": "",
+            "output_summary": "={{ $json.output.overall_risk_level }} ({{ $json.output.overall_confidence }}): {{ $json.output.reasoning }} Next: {{ $json.output.recommended_action }}",
+            "deal_id": "={{ $('Merge Findings').item.json.deal_id }}"
+          },
+          "schema": [
+            {
+              "id": "run_id",
+              "displayName": "run_id",
+              "type": "string",
+              "display": true,
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "timestamp",
+              "displayName": "timestamp",
+              "type": "string",
+              "display": true,
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "agent_name",
+              "displayName": "agent_name",
+              "type": "string",
+              "display": true,
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "input_tokens",
+              "displayName": "input_tokens",
+              "type": "string",
+              "display": true,
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "output_tokens",
+              "displayName": "output_tokens",
+              "type": "string",
+              "display": true,
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "cost_usd",
+              "displayName": "cost_usd",
+              "type": "string",
+              "display": true,
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "latency_ms",
+              "displayName": "latency_ms",
+              "type": "string",
+              "display": true,
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "output_summary",
+              "displayName": "output_summary",
+              "type": "string",
+              "display": true,
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "deal_id",
+              "displayName": "deal_id",
+              "type": "string",
+              "display": true,
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "b6d0c0a7-5459-4aff-ab15-12cf1033d8ba",
+      "name": "Log Synthesis to Sheet",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1980,
+        450
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "REPLACE_ME",
+          "name": "your googleSheetsOAuth2Api credential"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "YOUR_SHEET_ID",
+          "cachedResultName": "Deal Risk Agent - Synthetic Deals (Input)"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "id",
+          "value": "YOUR_SHEET_TAB",
+          "cachedResultName": "Untitled"
+        },
+        "options": {}
+      },
+      "id": "211c0c9f-48f9-444f-8f17-ec7f702a1dbe",
+      "name": "Read Deals",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        220,
+        450
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "REPLACE_ME",
+          "name": "your googleSheetsOAuth2Api credential"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "maxItems": 50
+      },
+      "id": "702f0917-e835-4532-9c17-6b56eb197de3",
+      "name": "Limit (test batch)",
+      "type": "n8n-nodes-base.limit",
+      "typeVersion": 1,
+      "position": [
+        440,
+        450
+      ]
+    },
+    {
+      "id": "dd53c03f-1f13-41db-8f47-dd760259c80a",
+      "name": "Run Context",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        50,
+        450
+      ],
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "1",
+              "name": "run_key",
+              "value": "={{ $now.toFormat('yyyyMMdd-HHmmss') }}-{{ $execution.id }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      }
+    }
+  ],
+  "connections": {
+    "Claude Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Engagement Pattern Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Engagement Risk Output": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Engagement Pattern Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Engagement Pattern Agent": {
+      "main": [
+        [
+          {
+            "node": "Log to Metrics Sheet",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Rename Engagement Output",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ICP Fit Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "ICP Fit Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ICP Fit Output": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "ICP Fit Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ICP Fit Agent": {
+      "main": [
+        [
+          {
+            "node": "Log ICP Fit to Sheet",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Rename ICP Output",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Competitive Mentions Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Competitive Mentions Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Competitive Mentions Output": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Competitive Mentions Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Competitive Mentions Agent": {
+      "main": [
+        [
+          {
+            "node": "Log Competitive Mentions to Sheet",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Rename Competitive Output",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Rename Engagement Output": {
+      "main": [
+        [
+          {
+            "node": "Merge Findings",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Rename ICP Output": {
+      "main": [
+        [
+          {
+            "node": "Merge Findings",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Rename Competitive Output": {
+      "main": [
+        [
+          {
+            "node": "Merge Findings",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ]
+    },
+    "Merge Findings": {
+      "main": [
+        [
+          {
+            "node": "Synthesis Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Synthesis Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Synthesis Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Synthesis Output": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Synthesis Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Synthesis Agent": {
+      "main": [
+        [
+          {
+            "node": "Log Synthesis to Sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Start": {
+      "main": [
+        [
+          {
+            "node": "Run Context",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Deals": {
+      "main": [
+        [
+          {
+            "node": "Limit (test batch)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Limit (test batch)": {
+      "main": [
+        [
+          {
+            "node": "Engagement Pattern Agent",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "ICP Fit Agent",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Competitive Mentions Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Run Context": {
+      "main": [
+        [
+          {
+            "node": "Read Deals",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": true
+  },
+  "pinData": {},
+  "meta": {
+    "templateCredsSetupCompleted": false
+  },
+  "tags": []
+}
