@@ -38,7 +38,7 @@ Each agent runs on Claude Sonnet 5 at low temperature and returns structured JSO
 
 ## Design decisions
 
-**Merging on `deal_id`, not row order.** The three agents run in parallel and their results get combined before synthesis. Combining by position only works if every branch returns the same deals in the same order. If a branch ever filtered or dropped a deal, results would shift and the synthesis agent would score one deal using another deal's findings, with no error. Every branch carries `deal_id`, and the merge is a SQL join on it:
+**Merging on `deal_id`, not row order.** The three specialist agents run on separate branches and their results get combined before synthesis. Combining by position only works if every branch returns the same deals in the same order. If a branch ever filtered or dropped a deal, results would shift and the synthesis agent would score one deal using another deal's findings, with no error. Every branch carries `deal_id`, and the merge is a SQL join on it:
 
 ```sql
 SELECT e.deal_id, e.company_name, e.engagement_output, i.icp_output, c.competitive_output
@@ -53,7 +53,7 @@ LEFT JOIN input3 AS c ON e.deal_id = c.deal_id
 
 ## Results
 
-One full run scored all 50 deals ($14.7M in pipeline) with 200 Claude calls, at an estimated $1 in API cost. (Token logging is on the to-do list below, so this is an estimate from prompt sizes, not a measured number.)
+One full run scored all 50 deals ($14.7M in pipeline) with 200 Claude calls in about 12 minutes, for $1.05 in API cost.
 
 | Overall risk | Deals | Pipeline | Share |
 |---|---|---|---|
@@ -73,7 +73,68 @@ Example output for one deal:
 > Next step: Re-engage the CFO with a tailored value/ROI case and expedite a competitive pricing response to counter the active BairesDev bid.
 > Why: Strong ICP fit, but engagement is thin and slow (5 emails, 1 meeting, 6.2-day response lag) and procurement is actively soliciting a competing bid.
 
-Full output: [`data/sample_results.csv`](data/sample_results.csv). Summary script: [`analysis/summarize_results.py`](analysis/summarize_results.py).
+### Cost and speed
+
+Token counts and latency for every call come from n8n's execution data for the run, so these are measured, not estimated. Pricing is Claude Sonnet 5 at $2 per million input tokens and $10 per million output tokens.
+
+| Agent | Avg input tokens | Avg output tokens | Avg latency | Cost for 50 deals |
+|---|---|---|---|---|
+| Engagement | 957 | 289 | 3.4s | $0.24 |
+| ICP Fit | 1,039 | 271 | 3.0s | $0.24 |
+| Competitive | 1,005 | 223 | 2.6s | $0.21 |
+| Synthesis | 1,287 | 468 | 5.3s | $0.36 |
+| **Total** | | | | **$1.05** |
+
+- **About 2 cents per deal.** Scoring a 500-deal pipeline every week would cost around $10.
+- **Output drives the bill.** Output tokens are 23% of the total but 59% of the cost, since they're priced 5x higher. Tighter reasoning limits are the main lever for cutting cost.
+- **The agents ran one after another, not at the same time.** The 200 call latencies add up to 719 seconds, almost exactly the 728-second run time, so n8n processed the branches in sequence. Running the three specialists concurrently would cut run time by about 40%.
+Full output: [`data/sample_results.csv`](data/sample_results.csv). Per-call usage: [`data/run_usage.csv`](data/run_usage.csv).
+
+## Token optimization and cost
+
+### What actually drives the cost
+
+I compared the billed tokens for each call against the prompt text and final answer stored in n8n's execution data. Visible token counts below are estimates (about 4 characters per token).
+
+| Per call, specialist agents | Billed | What's actually there |
+|---|---|---|
+| Input | ~1,000 tokens | ~250 tokens of prompt and deal data. The other ~750 is the tool definition n8n adds so the model returns structured JSON. |
+| Output | ~260 tokens | ~70 tokens of visible answer. The rest is the tool-call wrapper and the model's reasoning before it answers. |
+
+So the primary cost driver is **output tokens the reader never sees**. Output is 59% of the bill, and roughly 70% of those output tokens aren't in the final answer. The second driver is the **synthesis agent**, which accounts for 34% of the cost on its own because its prompt carries all three findings and its answer is the longest.
+
+### Ways to lower it
+
+Savings are guesstimates from this run's token counts and current list prices. None have been tested for quality yet, which is the real constraint (see Recommendations).
+
+| Option | Est. cost per 50 deals | vs. today | Trade-off |
+|---|---|---|---|
+| Today: Sonnet 5 for all four agents | $1.05 | | |
+| Cap hidden output (lower reasoning effort, max-token limits) | ~$0.72 | -32% | Reasoning may get shallower on messy deals |
+| Ask for JSON in the prompt instead of n8n's tool-based parser | ~$0.80 | -25% | Occasional malformed JSON, so it needs a validation step |
+| Batch API (results within 24 hours, 50% off) | ~$0.53 | -50% | Not real-time, and it means calling the API directly instead of n8n's agent nodes |
+| One call per deal instead of four | ~$0.50 | -50% | Lose the per-agent audit trail and the ability to use a different model per agent |
+| Hybrid: Haiku 5.5 for specialists, Sonnet 5 for synthesis | ~$0.40 | -62% | Cheaper model on the simpler checks, stronger model on the judgment call |
+| Haiku 5.5 for all four agents | ~$0.05 | -95% | Biggest savings, biggest quality risk |
+
+For context, a rules-only version (no AI) costs nothing to run but can't read deal notes, so it would miss signals like a champion leaving or a competitor bid. A RevOps analyst reviewing 50 deals at about 3 minutes each is roughly 2.5 hours of work every week.
+
+### Can it realistically come down over time?
+
+Yes, from two directions:
+
+1. **Configuration (in my control).** Combining the hybrid model mix with capped output should bring a run under $0.40 without changing what the workflow does. The repeated tool definition could also be cached, though at ~750 tokens it may be under the minimum length for caching to apply.
+2. **Pricing (not in my control, but trending down).** Per-token prices keep falling between model generations. On Anthropic's current price list, Sonnet 5 costs a third less than Sonnet 4.6 for both input and output, and Haiku 5.5 is a tenth the price of Haiku 4.5. ([Anthropic pricing](https://platform.claude.com/docs/en/about-claude/pricing))
+
+At 2 cents per deal, cost isn't the blocker for a weekly pipeline review. It starts to matter when scoring runs daily on thousands of deals.
+
+### Recommendations
+
+1. **Build a small accuracy check before cutting cost.** Hand-label 20 deals and compare each model setup against those labels. Without that, a cheaper setup could be quietly worse.
+2. **Try the hybrid setup first.** The specialist checks are narrow, so a smaller model is likely good enough there. Keep the strongest model where the judgment call happens.
+3. **Cap output length.** It's the biggest share of the bill and the easiest change.
+4. **Use the Batch API for scheduled runs.** A weekly review doesn't need instant answers, so the 50% discount is basically free.
+ Summary script: [`analysis/summarize_results.py`](analysis/summarize_results.py).
 
 ## Run it yourself
 
@@ -96,11 +157,13 @@ python analysis/summarize_results.py
 | `workflow/` | The n8n workflow, with credentials and sheet IDs removed |
 | `data/sample_deals.csv` | 50 synthetic deals (all company and contact names are made up) |
 | `data/sample_results.csv` | Agent scores from one full run |
-| `analysis/summarize_results.py` | Pandas script that turns the scores into pipeline views |
+| `data/run_usage.csv` | Tokens, latency, and cost for each of the run's 200 Claude calls |
+| `analysis/summarize_results.py` | Pandas script that turns the scores into pipeline views and a cost summary |
 
 ## What I'd add next
 
-- Log token usage and latency per call so cost per deal is measured, not estimated
+- Write token usage to the log automatically on every run (this run's usage was pulled from n8n's execution data afterward)
+- Run the three specialist agents concurrently to cut run time
 - Post the High risk deals to Slack each Monday
 - Run it on a schedule against CRM data instead of a sheet
 - Track how often the agent's risk call matches whether the deal actually closed
