@@ -27,14 +27,42 @@ flowchart LR
     H -.-> L
 ```
 
-| Agent | Looks at | Returns |
-|---|---|---|
-| Engagement | Emails, meetings, response time, notes | Low / Medium / High risk |
-| ICP Fit | Industry, deal size, buyer title | Strong / Moderate / Weak fit |
-| Competitive | Notes for competitor names and price comparisons | Low / Medium / High risk, competitors named |
-| Synthesis | The three findings above | Overall risk, confidence, next step, reasoning |
+Each agent runs on Claude Sonnet 5 at low temperature (0.1) and returns structured JSON, so every output has the same shape and can be logged and analyzed.
 
-Each agent runs on Claude Sonnet 5 at low temperature and returns structured JSON, so every output has the same shape and can be logged and analyzed. The synthesis agent weighs engagement most heavily, then fit, then competition, which matches how most sales leaders triage.
+## The agents
+
+Each agent is a specialist with one job, a fixed set of inputs, and a fixed output shape.
+
+| Agent | Specialty | Sees only | Returns |
+|---|---|---|---|
+| **Engagement** | Buyer engagement analyst. Judges whether the buyer is active or going quiet. | Company name, email count, meeting count, average response lag, deal notes | Risk (Low / Medium / High), confidence, one-sentence reason |
+| **ICP Fit** | Ideal customer profile analyst. Judges whether this is the right kind of deal. | Company name, industry, deal amount, contact title, plus the ICP rules ($50K+ deal, Director-level or above buyer, no startups, government, or education) | Fit (Strong / Moderate / Weak), confidence, one-sentence reason |
+| **Competitive** | Competitive intelligence analyst. Looks for competitor names, price comparisons, and competing bids. | Company name, deal notes | Risk (Low / Medium / High), confidence, competitors named, one-sentence reason |
+| **Synthesis** | Deal reviewer. Combines the three findings into one call, weighting engagement most, then fit, then competition (the way most sales leaders triage). | Company name, deal ID, and the three specialists' findings. Never the raw deal data. | Overall risk, confidence, recommended next step, one-to-two sentence reason |
+
+### Tools
+
+None of the agents has tools that touch the outside world. Each agent's Tool and Memory slots in n8n are empty. The only tool each one receives is the JSON formatter n8n attaches for structured output, which lets it hand back an answer and nothing else.
+
+| Capability | Agents have it? | Who does it instead |
+|---|---|---|
+| Read the deal data | Only the fields passed in their prompt | n8n reads the sheet and builds each prompt |
+| Search the web or look up companies | No | Not done |
+| Remember previous deals or runs | No | Each call starts fresh |
+| Write to the sheet, CRM, or anywhere else | No | Fixed n8n nodes write the log, with no AI involved |
+| Contact anyone or change a deal | No | A person acts on the recommendation |
+
+### How this reinforces guardrails
+
+- **Least privilege.** An agent can't misuse access it doesn't have. With no web, write, or messaging tools, the worst a bad answer can do is be a bad answer. It can't send an email, update a CRM record, or pull in outside data.
+- **Data minimization.** Each agent only gets the fields its job needs. The ICP agent never sees deal notes, the competitive agent never sees deal size, and no agent ever sees the contact's name.
+- **Separation of duties.** The specialists can't see each other's work, so one agent's mistake can't steer another. The synthesis agent only sees findings, not raw data, so it has to reason from the specialists' evidence instead of re-deciding on its own.
+- **Fixed output shape.** Structured JSON means every answer can be logged, checked, and compared run to run. An answer in the wrong shape fails instead of slipping through as free text.
+- **Deterministic plumbing.** Reading data, merging results on `deal_id`, and writing the log are regular n8n nodes, not AI. The AI only does the judgment calls.
+- **Audit trail.** Every specialist finding and every synthesis call is logged with its run ID and deal ID, so any recommendation can be traced back to the evidence behind it.
+- **Human in the loop.** The output is a recommendation for a rep or manager. Nothing happens to a deal automatically.
+
+**A known gap:** the output schema fixes the field names and types, but not the allowed values. A rating like "Very High" would pass the schema even though the prompt asks for Low, Medium, or High. In this run, all 200 ratings came back within the allowed values, but nothing enforces that yet. A validation step is on the to-do list.
 
 ## Design decisions
 
@@ -164,6 +192,7 @@ python analysis/summarize_results.py
 
 - Write token usage to the log automatically on every run (this run's usage was pulled from n8n's execution data afterward)
 - Run the three specialist agents concurrently to cut run time
+- Add a validation step that rejects any rating outside the allowed values
 - Post the High risk deals to Slack each Monday
 - Run it on a schedule against CRM data instead of a sheet
 - Track how often the agent's risk call matches whether the deal actually closed
