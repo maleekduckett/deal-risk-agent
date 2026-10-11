@@ -162,6 +162,7 @@ At 2 cents per deal, cost isn't the blocker for a weekly pipeline review. It sta
 2. **Try the hybrid setup first.** The specialist checks are narrow, so a smaller model is likely good enough there. Keep the strongest model where the judgment call happens.
 3. **Cap output length.** It's the biggest share of the bill and the easiest change.
 4. **Use the Batch API for scheduled runs.** A weekly review doesn't need instant answers, so the 50% discount is basically free.
+5. **Try this build in Opus 5.5 and compare the results you get.** Opus 5.5 is priced at $4 per million input tokens and $20 per million output, double Sonnet 5, so this run would cost about $2.11. Comparing its risk calls against the same 20 hand-labeled deals shows whether the stronger model changes any decisions, or just costs more.
  Summary script: [`analysis/summarize_results.py`](analysis/summarize_results.py).
 
 ## Run it yourself
