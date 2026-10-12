@@ -35,6 +35,8 @@ Each agent runs on Claude Sonnet 5 at low temperature (0.1) and returns structur
 
 Each agent is a specialist with one job, a fixed set of inputs, and a fixed output shape.
 
+![Agent access map: what each agent can see, and what every agent is blocked from](docs/agent-access-map.jpg)
+
 | Agent | Specialty | Sees only | Returns |
 |---|---|---|---|
 | **Engagement** | Buyer engagement analyst. Judges whether the buyer is active or going quiet. | Company name, email count, meeting count, average response lag, deal notes | Risk (Low / Medium / High), confidence, one-sentence reason |
@@ -193,7 +195,7 @@ python analysis/make_chart.py
 | `data/sample_results.csv` | Agent scores from one full run |
 | `data/run_usage.csv` | Tokens, latency, and cost for each of the run's 200 Claude calls |
 | `analysis/make_chart.py` | Draws the pipeline-by-stage chart in `docs/` |
-| `docs/` | Workflow screenshot and results chart |
+| `docs/` | Workflow screenshot, agent access map (built in Miro), and results chart |
 | `analysis/summarize_results.py` | Pandas script that turns the scores into pipeline views and a cost summary |
 
 ## What I'd add next
